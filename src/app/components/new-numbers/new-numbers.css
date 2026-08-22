@@ -1,0 +1,114 @@
+.leads-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Leads Table Specifics */
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.leads-table th {
+  background: rgba(15, 23, 42, 0.4);
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: 'Outfit', sans-serif;
+  border-bottom: 1px solid var(--border-glass-bright);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.leads-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-glass);
+  vertical-align: middle;
+}
+
+.leads-table tbody tr {
+  transition: var(--transition-smooth);
+}
+
+.leads-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Cell Styles */
+.phone-cell {
+  letter-spacing: 0.02em;
+}
+
+.connection-span {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.comment-cell {
+  max-width: 250px;
+}
+
+.truncate-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+
+.actions-header {
+  text-align: right !important;
+}
+
+.actions-cell {
+  text-align: right;
+}
+
+.action-buttons {
+  display: inline-flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Promote Button */
+.promote-btn {
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  color: var(--accent-cyan);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  gap: 0.3rem;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.05);
+}
+
+.promote-btn:hover {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.5);
+  transform: scale(1.03);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+}
+
+.promoted-badge {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Promotion Modal Title alignment */
+.promote-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.promote-header-title h2 {
+  color: #fff;
+  font-size: 1.5rem;
+}

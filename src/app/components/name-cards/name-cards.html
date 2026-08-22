@@ -1,0 +1,231 @@
+<div class="cards-container">
+  <!-- Controls Header -->
+  <div class="controls-header glass-card">
+    <div class="search-wrapper">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input 
+        type="text" 
+        placeholder="Search by name, phone, location, notes..." 
+        [(ngModel)]="searchText"
+        (ngModelChange)="applyFilters()"
+      />
+    </div>
+
+    <div class="filters-wrapper">
+      <select [(ngModel)]="selectedZone" (change)="applyFilters()">
+        <option value="">All Zones</option>
+        <option *ngFor="let zone of zones" [value]="zone">{{ zone }}</option>
+      </select>
+
+      <select [(ngModel)]="selectedConnection" (change)="applyFilters()">
+        <option value="">All Connections</option>
+        <option *ngFor="let conn of connections" [value]="conn">{{ conn }}</option>
+      </select>
+
+      <button class="btn btn-primary" (click)="openAddModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        Add Card
+      </button>
+    </div>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid" *ngIf="paginatedCards.length > 0; else emptyState">
+    <div class="card-item glass-card" *ngFor="let card of paginatedCards">
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="avatar" [style.background]="getAvatarGradient(card.name)">
+          {{ getAvatarInitials(card.name) }}
+        </div>
+        <div class="header-details">
+          <h3 class="card-name" [title]="card.name">{{ card.name }}</h3>
+          <div class="badge-wrapper">
+            <span *ngIf="card.zone" class="badge" [ngClass]="{
+              'badge-hot': card.zone.toUpperCase() === 'HOT',
+              'badge-warm': card.zone.toUpperCase() === 'WARM',
+              'badge-cold': card.zone.toUpperCase() === 'COLD'
+            }">{{ card.zone }}</span>
+            <span *ngIf="card.connection" class="conn-tag">{{ card.connection }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <div class="info-row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 9.75v7.17z"/></svg>
+          <span class="info-text">{{ card.contactNumber || 'No Phone' }}</span>
+        </div>
+
+        <div class="info-row" *ngIf="card.location">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span class="info-text">{{ card.location }}</span>
+        </div>
+
+        <hr class="card-divider" />
+
+        <!-- Status logs -->
+        <div class="status-logs">
+          <div class="status-item">
+            <span class="status-label">Info:</span>
+            <span class="status-val" [class.highlight]="card.info">{{ card.info || 'None' }}</span>
+            <span class="status-date" *ngIf="card.infoDate">{{ card.infoDate }}</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Invite:</span>
+            <span class="status-val" [class.highlight]="card.invite">{{ card.invite || 'None' }}</span>
+            <span class="status-date" *ngIf="card.inviteDate">{{ card.inviteDate }}</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Plan:</span>
+            <span class="status-val" [class.highlight]="card.plan && card.plan.toLowerCase() !== 'no'">{{ card.plan || 'None' }}</span>
+          </div>
+        </div>
+
+        <div class="notes-preview" *ngIf="card.notes || card.comments">
+          <p class="notes-text" [title]="card.notes || card.comments">
+            {{ card.notes || card.comments }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Card Footer Actions -->
+      <div class="card-footer">
+        <button class="icon-btn text-violet" (click)="openEditModal(card)" title="Edit Card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn text-red" (click)="confirmDelete(card)" title="Delete Card">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-results glass-card">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <h3>No cards match your criteria</h3>
+      <p>Try resetting filters or changing your search terms.</p>
+    </div>
+  </ng-template>
+
+  <!-- Pagination Controls -->
+  <div class="pagination" *ngIf="filteredCards.length > 0">
+    <span class="pagination-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ currentPage * pageSize > filteredCards.length ? filteredCards.length : currentPage * pageSize }} of {{ filteredCards.length }} cards
+    </span>
+    
+    <div class="pagination-buttons">
+      <button class="btn btn-secondary btn-sm" (click)="prevPage()" [disabled]="currentPage === 1">
+        Prev
+      </button>
+
+      <button 
+        *ngFor="let p of getPages()" 
+        class="btn btn-sm page-btn" 
+        [class.btn-primary]="p === currentPage"
+        [class.btn-secondary]="p !== currentPage"
+        (click)="setPage(p)"
+      >
+        {{ p }}
+      </button>
+
+      <button class="btn btn-secondary btn-sm" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- CRUD Add / Edit Modal -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content glass-card">
+      <h2>{{ isEditMode ? 'Edit NameCard' : 'Add NameCard' }}</h2>
+      <p class="modal-subtitle">Fill in the contact information and connection details</p>
+
+      <form (submit)="saveCard()">
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label>Name (DisplayName) *</label>
+            <input type="text" [(ngModel)]="modalCard.name" name="name" required placeholder="Enter contact name" />
+          </div>
+
+          <div class="form-group">
+            <label>Contact Number</label>
+            <input type="text" [(ngModel)]="modalCard.contactNumber" name="contactNumber" placeholder="e.g. +91 9952925095" />
+          </div>
+
+          <div class="form-group">
+            <label>Zone</label>
+            <select [(ngModel)]="modalCard.zone" name="zone">
+              <option value="HOT">HOT</option>
+              <option value="WARM">WARM</option>
+              <option value="COLD">COLD</option>
+              <option value="">None</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Connection</label>
+            <input type="text" [(ngModel)]="modalCard.connection" name="connection" placeholder="e.g. Urja, Friend" />
+          </div>
+
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" [(ngModel)]="modalCard.location" name="location" placeholder="e.g. Chennai" />
+          </div>
+
+          <div class="form-group">
+            <label>Info Status</label>
+            <input type="text" [(ngModel)]="modalCard.info" name="info" placeholder="e.g. Talked, No response" />
+          </div>
+
+          <div class="form-group">
+            <label>Info Date</label>
+            <input type="date" [(ngModel)]="modalCard.infoDate" name="infoDate" />
+          </div>
+
+          <div class="form-group">
+            <label>Invite Status</label>
+            <input type="text" [(ngModel)]="modalCard.invite" name="invite" placeholder="e.g. Invited, Rejected" />
+          </div>
+
+          <div class="form-group">
+            <label>Invite Date</label>
+            <input type="date" [(ngModel)]="modalCard.inviteDate" name="inviteDate" />
+          </div>
+
+          <div class="form-group span-2">
+            <label>Plan Status</label>
+            <input type="text" [(ngModel)]="modalCard.plan" name="plan" placeholder="e.g. Shared, Not Shared, No" />
+          </div>
+
+          <div class="form-group span-2">
+            <label>Comments / Notes</label>
+            <textarea [(ngModel)]="modalCard.notes" name="notes" rows="3" placeholder="Additional details..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm">
+    <div class="modal-content glass-card delete-modal">
+      <div class="delete-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 9-6 6"/><path d="m9 9 6 6"/><circle cx="12" cy="12" r="10"/></svg>
+      </div>
+      <h2>Delete NameCard?</h2>
+      <p>Are you sure you want to delete the contact card for <strong>{{ cardToDelete?.name }}</strong>? This action cannot be undone.</p>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="deleteCard()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

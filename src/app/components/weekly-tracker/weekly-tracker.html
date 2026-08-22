@@ -1,0 +1,268 @@
+<div class="tracker-container">
+  <!-- Controls Panel -->
+  <div class="controls-header glass-card">
+    <div class="filters-group">
+      <div class="select-wrapper">
+        <label>Month</label>
+        <select [(ngModel)]="filterMonth" (change)="applyFilters()">
+          <option value="">All Months</option>
+          <option *ngFor="let m of months" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <div class="select-wrapper">
+        <label>Week No</label>
+        <select [(ngModel)]="filterWeek" (change)="applyFilters()">
+          <option value="">All Weeks</option>
+          <option *ngFor="let w of weeks" [value]="w">Week {{ w }}</option>
+        </select>
+      </div>
+
+      <div class="select-wrapper search-select-wrapper">
+        <label>Contact Name</label>
+        <div class="autocomplete-container">
+          <input
+            type="text"
+            [(ngModel)]="filterNameSearchText"
+            name="filterNameSearchText"
+            placeholder="Search contact names..."
+            (focus)="showFilterNameDropdown = true; highlightedFilterNameIndex = 0"
+            (ngModelChange)="onFilterNameSearchInput()"
+            (keydown)="onFilterNameKeydown($event)"
+          />
+          <button *ngIf="filterName" type="button" class="clear-btn" (click)="clearFilterName()" aria-label="Clear selected contact">×</button>
+          <div class="autocomplete-list" *ngIf="showFilterNameDropdown && filteredFilterNames.length > 0">
+            <button
+              type="button"
+              *ngFor="let name of filteredFilterNames; let i = index"
+              [class.active-option]="i === highlightedFilterNameIndex"
+              (click)="selectContactForFilter(name)"
+            >
+              {{ name }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary log-btn" (click)="openAddModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+      Log Activity
+    </button>
+  </div>
+
+  <!-- Tracker Table Grid -->
+  <div class="table-responsive glass-card" *ngIf="filteredActivities.length > 0; else emptyState">
+    <table class="tracker-table">
+      <thead>
+        <tr>
+          <th>Date / Day</th>
+          <th>Month / Week</th>
+          <th>Contact Name</th>
+          <th>Info Updates</th>
+          <th>Invite Updates</th>
+          <th>Plan</th>
+          <th>Comments & Notes</th>
+          <th class="actions-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let act of filteredActivities">
+          <td>
+            <div class="date-cell">
+              <span class="text-white">{{ act.date }}</span>
+              <span class="day-sub">{{ act.day }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="week-cell">
+              <span class="badge badge-cold">{{ act.salesMonth }}</span>
+              <span class="week-sub">W{{ act.weekNo }}</span>
+            </div>
+          </td>
+          <td class="name-cell font-semibold text-white">{{ act.name }}</td>
+          <td>
+            <div class="update-cell" *ngIf="act.info; else emptyLog">
+              <span class="update-val">{{ act.info }}</span>
+              <span class="update-date" *ngIf="act.infoDate">{{ act.infoDate }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="update-cell" *ngIf="act.invite; else emptyLog">
+              <span class="update-val">{{ act.invite }}</span>
+              <span class="update-date" *ngIf="act.inviteDate">{{ act.inviteDate }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="plan-cell" [ngClass]="{
+              'shared': act.plan && act.plan.toLowerCase() !== 'no' && act.plan !== '',
+              'not-shared': !act.plan || act.plan.toLowerCase() === 'no'
+            }">
+              {{ act.plan || 'No' }}
+            </span>
+          </td>
+          <td class="comment-cell" [title]="act.comments || act.notes">
+            <span class="truncate-text">{{ act.comments || act.notes || '-' }}</span>
+          </td>
+          <td class="actions-cell">
+            <div class="action-buttons">
+              <button class="icon-btn text-violet" (click)="openEditModal(act)" title="Edit Activity">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button class="icon-btn text-red" (click)="confirmDelete(act)" title="Delete Activity">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #emptyLog>
+    <span class="text-muted">-</span>
+  </ng-template>
+
+  <ng-template #emptyState>
+    <div class="empty-results glass-card">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="12" cy="12" r="10"/><path d="m22 22-4.3-4.3"/><path d="M9 12h6"/></svg>
+      <h3>No activities found</h3>
+      <p>Select different filter options or create a new activity log.</p>
+    </div>
+  </ng-template>
+
+  <!-- Activity Logging Modal -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content glass-card">
+      <h2>{{ isEditMode ? 'Edit Activity Log' : 'Log Daily Activity' }}</h2>
+      <p class="modal-subtitle">Log daily updates, invitations, and connection progress</p>
+
+      <form (submit)="saveActivity()">
+        <div class="form-grid">
+          <!-- Select Name -->
+          <div class="form-group span-2">
+            <label>Name (Select from NameCards) *</label>
+            <div class="autocomplete-container modal-autocomplete">
+              <input
+                type="text"
+                [(ngModel)]="contactSearchText"
+                name="contactSearchText"
+                placeholder="Search contact names..."
+                (focus)="showContactDropdown = true; highlightedContactIndex = 0"
+                (ngModelChange)="onContactSearchInput()"
+                (keydown)="onContactKeydown($event)"
+                required
+              />
+              <div class="autocomplete-list" *ngIf="showContactDropdown && filteredModalNames.length > 0">
+                <button
+                  type="button"
+                  *ngFor="let name of filteredModalNames; let i = index"
+                  [class.active-option]="i === highlightedContactIndex"
+                  (click)="selectContactForModal(name)"
+                >
+                  {{ name }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date & Auto Calculations -->
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="modalActivity.date" name="date" (ngModelChange)="onDateChange($event)" required />
+          </div>
+
+          <div class="form-group">
+            <label>Day</label>
+            <input type="text" [(ngModel)]="modalActivity.day" name="day" readonly class="readonly-input" />
+          </div>
+
+          <div class="form-group">
+            <label>Sales Month</label>
+            <input type="text" [(ngModel)]="modalActivity.salesMonth" name="salesMonth" readonly class="readonly-input" />
+          </div>
+
+          <div class="form-group">
+            <label>Week No</label>
+            <input type="text" [(ngModel)]="modalActivity.weekNo" name="weekNo" placeholder="Week No" />
+          </div>
+
+          <!-- Info Details -->
+          <div class="form-group">
+            <label>Info Status</label>
+            <input type="text" [(ngModel)]="modalActivity.info" name="info" placeholder="e.g. Talked, Shared info" />
+          </div>
+
+          <div class="form-group">
+            <label>Info Update Date</label>
+            <input type="date" [(ngModel)]="modalActivity.infoDate" name="infoDate" />
+          </div>
+
+          <!-- Invite Details -->
+          <div class="form-group">
+            <label>Invite Status</label>
+            <input type="text" [(ngModel)]="modalActivity.invite" name="invite" placeholder="e.g. Invited to meet" />
+          </div>
+
+          <div class="form-group">
+            <label>Invite Update Date</label>
+            <input type="date" [(ngModel)]="modalActivity.inviteDate" name="inviteDate" />
+          </div>
+
+          <!-- Plan Details -->
+          <div class="form-group span-2">
+            <label>Plan Shared?</label>
+            <input type="text" [(ngModel)]="modalActivity.plan" name="plan" placeholder="e.g. Shared, Not Shared, No" />
+          </div>
+
+          <!-- Add details about New Number if applicable -->
+          <div class="form-group span-2 section-divider-title">
+            <span>New Number Connection Logged (Optional)</span>
+          </div>
+
+          <div class="form-group">
+            <label>New Number</label>
+            <input type="text" [(ngModel)]="modalActivity.newNumber" name="newNumber" placeholder="e.g. +91 9884..." />
+          </div>
+
+          <div class="form-group">
+            <label>New Connection</label>
+            <input type="text" [(ngModel)]="modalActivity.newConnection" name="newConnection" placeholder="e.g. Warm" />
+          </div>
+
+          <div class="form-group span-2">
+            <label>New Location</label>
+            <input type="text" [(ngModel)]="modalActivity.newLocation" name="newLocation" placeholder="Location details" />
+          </div>
+
+          <!-- Notes -->
+          <div class="form-group span-2">
+            <label>Comments / Notes</label>
+            <textarea [(ngModel)]="modalActivity.comments" name="comments" rows="3" placeholder="Enter comments or logs..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Activity Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm">
+    <div class="modal-content glass-card delete-modal">
+      <div class="delete-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 9-6 6"/><path d="m9 9 6 6"/><circle cx="12" cy="12" r="10"/></svg>
+      </div>
+      <h2>Delete Activity Log?</h2>
+      <p>Are you sure you want to delete this activity log for <strong>{{ activityToDelete?.name }}</strong> on {{ activityToDelete?.date }}? This will remove the history record.</p>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="deleteActivity()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
